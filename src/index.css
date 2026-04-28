@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #000008;
+  --color-primary: #00d4ff;
+  --color-secondary: #8b5cf6;
+  --color-tertiary: #f59e0b;
+  --color-success: #10b981;
+  --color-text: #e2e8f0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Space Mono', monospace;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) #0a0a1a;
+}
+
+.loss-curve {
+  stroke-dasharray: 360;
+  stroke-dashoffset: 360;
+  animation: loss-draw 1.8s ease-out forwards;
+}
+
+.loss-dot {
+  offset-path: path("M 12 18 C 48 44, 68 66, 96 70 S 150 76, 176 84 S 226 96, 268 104");
+  animation: loss-dot 1.8s ease-out forwards;
+  filter: drop-shadow(0 0 8px #00d4ff);
+}
+
+.contact-social-orbit .orbit-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #00d4ff;
+  box-shadow: 0 0 10px #00d4ff;
+  animation: contact-orbit 2.8s linear infinite;
+}
+
+@keyframes loss-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes loss-dot {
+  from { offset-distance: 0%; opacity: 0.3; }
+  to { offset-distance: 100%; opacity: 1; }
+}
+
+@keyframes contact-orbit {
+  from { transform: rotate(0deg) translateX(28px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
+}
+
+/* ── About Section ──────────────────────────────────────────────── */
+
+@keyframes aboutBorderShimmer {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes aboutScanline {
+  0%   { top: -2px; opacity: 0; }
+  6%   { opacity: 1; }
+  94%  { opacity: 0.5; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes aboutGlimmer {
+  0%, 100% { opacity: 0; transform: translateX(-120%) skewX(-12deg); }
+  50%       { opacity: 1; transform: translateX(300%)  skewX(-12deg); }
+}
+
+@keyframes liveDot {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.5); box-shadow: 0 0 10px #10b981; }
+}
+
+@keyframes arrowPulse {
+  0%, 100% { transform: translateX(0); opacity: 0.5; }
+  50%       { transform: translateX(3px); opacity: 1; }
+}
+
+@keyframes chipFade {
+  0%, 100% { opacity: 0.65; }
+  50%       { opacity: 1; }
+}
+
+.about-card-border {
+  background: linear-gradient(
+    135deg,
+    #00d4ff66,
+    #8b5cf655,
+    #00000000 40%,
+    #f59e0b33,
+    #00d4ff55
+  );
+  background-size: 300% 300%;
+  animation: aboutBorderShimmer 5s ease infinite;
+  border-radius: 20px;
+  padding: 1px;
+}
+
+.about-card-inner {
+  background:
+    radial-gradient(ellipse at 18% 8%, rgba(0,212,255,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(139,92,246,0.05) 0%, transparent 45%),
+    rgba(0, 0, 8, 0.91);
+  border-radius: 19px;
+  overflow: hidden;
+  position: relative;
+}
+
+.about-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0,212,255,0.35) 25%,
+    rgba(0,212,255,0.75) 50%,
+    rgba(0,212,255,0.35) 75%,
+    transparent 100%
+  );
+  animation: aboutScanline 4.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.about-glimmer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0,212,255,0.035),
+    transparent
+  );
+  animation: aboutGlimmer 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.about-live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 7px #10b981;
+  animation: liveDot 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.about-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.07em;
+  padding: 3px 9px;
+  border-radius: 3px;
+  cursor: default;
+  transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+.about-meta-chip:hover {
+  filter: brightness(1.4);
+  transform: translateY(-1px);
+}
+
+.about-stat-chip {
+  animation: chipFade 2.8s ease-in-out infinite;
+}
+.about-stat-chip:nth-child(2) { animation-delay: 0.93s; }
+.about-stat-chip:nth-child(3) { animation-delay: 1.87s; }
+
+.about-arrow {
+  animation: arrowPulse 2s ease-in-out infinite;
+  display: inline-block;
+}
