@@ -5,6 +5,14 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 import { skills } from '../../data/skills'
 import { setSelectedSkill, useSelectedSkill } from './skillsStore'
+import { useSectionProgress } from '../shared/ScrollManager'
+
+const ORBIT_SCALE = 0.86
+const PLANET_SCALE = 1.02
+const CLOSE_CAMERA = new THREE.Vector3(0, 3.2, 9.5)
+const WIDE_CAMERA = new THREE.Vector3(0, 18.5, 40)
+const CLOSE_LOOK_AT = new THREE.Vector3(0, 0.18, 0)
+const WIDE_LOOK_AT = new THREE.Vector3(0, 0, 0)
 
 // ─── GLSL: Stefan Gustavson's simplex noise ───────────────────────────────────
 const SIMPLEX_GLSL = /* glsl */`
@@ -198,11 +206,14 @@ function Moon({ index, total, planetSpeed, planetColor, timeRef }) {
 }
 
 // ─── Planet ──────────────────────────────────────────────────────────────────
-function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
+function Planet({ skill, phase, timeRef, isSelected, onSelect }) {
   const groupRef   = useRef()
   const meshRef    = useRef()
+  const glowRef    = useRef()
   const hoveredRef = useRef(false)
   const texture    = useMemo(() => makeCanvasTexture(skill.name, skill.color), [skill])
+  const visualOrbit = skill.orbit * ORBIT_SCALE
+  const visualSize = skill.size * PLANET_SCALE
 
   // Keep scale in sync when selection changes
   useEffect(() => {
@@ -215,16 +226,20 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
     if (!groupRef.current) return
     const t = timeRef.current
     groupRef.current.position.set(
-      Math.cos(t * skill.speed + phase) * skill.orbit,
+      Math.cos(t * skill.speed + phase) * visualOrbit,
       0,
-      Math.sin(t * skill.speed + phase) * skill.orbit,
+      Math.sin(t * skill.speed + phase) * visualOrbit,
     )
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.4
+    if (glowRef.current) {
+      const pulse = isSelected || hoveredRef.current ? 1.18 : 1
+      glowRef.current.scale.setScalar(pulse + Math.sin(t * 2.4 + phase) * 0.045)
+    }
   })
 
   function handleClick(e) {
     e.stopPropagation()
-    if (isSelected) { onDeselect() } else { onSelect(skill, groupRef.current.position) }
+    onSelect(skill, groupRef.current.position)
   }
 
   function handlePointerOver(e) {
@@ -252,7 +267,7 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
-        <sphereGeometry args={[skill.size, 32, 32]} />
+        <sphereGeometry args={[visualSize, 40, 40]} />
         <meshStandardMaterial
           map={texture}
           color={skill.color}
@@ -262,6 +277,31 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
           metalness={0.1}
         />
       </mesh>
+
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[visualSize * 1.28, 32, 32]} />
+        <meshBasicMaterial
+          color={skill.color}
+          transparent
+          opacity={isSelected ? 0.18 : 0.08}
+          side={THREE.BackSide}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {isSelected && (
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[visualSize * 1.55, 0.024, 8, 80]} />
+          <meshBasicMaterial
+            color={skill.color}
+            transparent
+            opacity={0.62}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      )}
 
       {/* Moons */}
       {skill.moons.map((moon, i) => (
@@ -278,20 +318,25 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
 
       {/* Label */}
       <Html
-        distanceFactor={12}
-        position={[0, skill.size + 0.32, 0]}
+        distanceFactor={18}
+        position={[0, visualSize + 0.48, 0]}
         style={{ pointerEvents: 'none' }}
       >
         <div style={{
           fontFamily: 'Space Mono, monospace',
-          fontSize: '11px',
+          fontSize: '13px',
           fontWeight: 700,
+          padding: '4px 7px',
+          border: `1px solid ${skill.color}55`,
+          borderRadius: '4px',
+          background: 'rgba(0, 0, 8, 0.72)',
+          backdropFilter: 'blur(6px)',
           color: isSelected ? skill.color : 'rgba(226,232,240,0.82)',
           whiteSpace: 'nowrap',
           textShadow: isSelected
             ? `0 0 10px ${skill.color}, 0 0 20px ${skill.color}`
             : '0 0 6px rgba(0,0,0,0.9)',
-          letterSpacing: '0.04em',
+          letterSpacing: 0,
           transition: 'color 0.3s',
         }}>
           {skill.name}
@@ -306,7 +351,13 @@ function OrbitRing({ radius }) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[radius - 0.015, radius + 0.015, 80]} />
-      <meshBasicMaterial color="#ffffff" opacity={0.07} transparent side={THREE.DoubleSide} />
+      <meshBasicMaterial
+        color={radius % 2 > 1 ? '#8b5cf6' : '#00d4ff'}
+        opacity={0.055}
+        transparent
+        side={THREE.DoubleSide}
+        blending={THREE.AdditiveBlending}
+      />
     </mesh>
   )
 }
@@ -315,9 +366,17 @@ function OrbitRing({ radius }) {
 export default function SolarSystem() {
   const { camera } = useThree()
   const [selectedSkill] = useSelectedSkill()
+  const sectionProgress = useSectionProgress(3)
   const timeRef = useRef(0)
-  const cameraPos = useRef(new THREE.Vector3(0, 20, 44))
-  const lookAtTarget = useRef(new THREE.Vector3(0, 0, 0))
+  const cameraPos = useRef(CLOSE_CAMERA.clone())
+  const lookAtTarget = useRef(CLOSE_LOOK_AT.clone())
+  const scrollProgressRef = useRef(0)
+  const targetCamera = useRef(CLOSE_CAMERA.clone())
+  const targetLookAt = useRef(CLOSE_LOOK_AT.clone())
+
+  useEffect(() => {
+    scrollProgressRef.current = sectionProgress
+  }, [sectionProgress])
 
   // Stagger phases so planets don't start on top of each other
   const phases = useMemo(
@@ -327,12 +386,12 @@ export default function SolarSystem() {
 
   // Set camera to overview on mount
   useEffect(() => {
-    const target = lookAtTarget.current
-    gsap.to(camera.position, { x: 0, y: 20, z: 44, duration: 1.4, ease: 'power2.out' })
-    cameraPos.current.set(0, 20, 44)
+    camera.position.copy(CLOSE_CAMERA)
+    camera.lookAt(CLOSE_LOOK_AT)
+    cameraPos.current.copy(CLOSE_CAMERA)
+    lookAtTarget.current.copy(CLOSE_LOOK_AT)
     return () => {
       gsap.killTweensOf(camera.position)
-      gsap.killTweensOf(target)
       camera.position.set(0, 0, 8)
       camera.lookAt(0, 0, 0)
       setSelectedSkill(null)
@@ -348,31 +407,34 @@ export default function SolarSystem() {
 
   function handleSelect(skill, position) {
     setSelectedSkill(skill)
-    const angle = Math.atan2(position.z, position.x)
-    const pullIn = skill.orbit * 0.5
-    gsap.to(cameraPos.current, {
-      x: Math.cos(angle) * pullIn,
-      y: skill.orbit * 0.45,
-      z: Math.sin(angle) * pullIn + skill.orbit * 0.6,
-      duration: 1.3,
-      ease: 'power2.inOut',
-    })
     gsap.to(lookAtTarget.current, {
       x: position.x, y: 0, z: position.z,
-      duration: 1.3,
+      duration: 0.8,
       ease: 'power2.inOut',
     })
   }
 
   function handleDeselect() {
     setSelectedSkill(null)
-    gsap.to(cameraPos.current, { x: 0, y: 16, z: 34, duration: 1.3, ease: 'power2.inOut' })
-    gsap.to(lookAtTarget.current, { x: 0, y: 0, z: 0, duration: 1.3, ease: 'power2.inOut' })
+    gsap.to(lookAtTarget.current, {
+      x: targetLookAt.current.x,
+      y: targetLookAt.current.y,
+      z: targetLookAt.current.z,
+      duration: 0.8,
+      ease: 'power2.inOut',
+    })
   }
 
   useFrame((_, delta) => {
     timeRef.current += delta
-    camera.position.lerp(cameraPos.current, 0.05)
+    const p = THREE.MathUtils.smoothstep(scrollProgressRef.current, 0, 1)
+    targetCamera.current.lerpVectors(CLOSE_CAMERA, WIDE_CAMERA, p)
+    targetCamera.current.x = Math.sin(p * Math.PI * 1.1) * 2.2
+    targetLookAt.current.lerpVectors(CLOSE_LOOK_AT, WIDE_LOOK_AT, p)
+
+    if (!selectedSkill) lookAtTarget.current.lerp(targetLookAt.current, 0.08)
+    cameraPos.current.lerp(targetCamera.current, 0.08)
+    camera.position.copy(cameraPos.current)
     camera.lookAt(lookAtTarget.current)
   })
 
@@ -382,14 +444,13 @@ export default function SolarSystem() {
 
       {skills.map((skill, i) => (
         <group key={skill.name}>
-          <OrbitRing radius={skill.orbit} />
+          <OrbitRing radius={skill.orbit * ORBIT_SCALE} />
           <Planet
             skill={skill}
             phase={phases[i]}
             timeRef={timeRef}
             isSelected={selectedSkill?.name === skill.name}
             onSelect={handleSelect}
-            onDeselect={handleDeselect}
           />
         </group>
       ))}

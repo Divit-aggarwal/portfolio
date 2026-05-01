@@ -276,6 +276,7 @@ export default function NeuralForm() {
   const successRef = useRef()
   const buttonRef  = useRef()
   const beamRef    = useRef()
+  const ringRefs   = useRef([])
 
   const [values, setValues] = useState(INITIAL_VALUES)
   const [errors, setErrors] = useState({})
@@ -304,27 +305,46 @@ export default function NeuralForm() {
     window.dispatchEvent(new CustomEvent('contact:valid-submit'))
     window.location.href = buildMailtoUrl(values)
 
-    // Button compress
+    // Button compress + glow flash
     gsap.to(buttonRef.current, {
-      scaleY: 0.88, duration: 0.1, ease: 'power2.in',
-      onComplete: () => gsap.to(buttonRef.current, { scaleY: 1, duration: 0.22, ease: 'back.out(2)' }),
+      scaleY: 0.84, duration: 0.09, ease: 'power2.in',
+      onComplete: () => gsap.to(buttonRef.current, { scaleY: 1, duration: 0.28, ease: 'back.out(2.5)' }),
+    })
+    gsap.fromTo(buttonRef.current,
+      { boxShadow: '0 0 60px rgba(0,212,255,1), 0 0 120px rgba(0,212,255,0.6)' },
+      { boxShadow: '0 0 22px rgba(0,212,255,0.18)', duration: 0.9, ease: 'power3.out' }
+    )
+
+    // Burst rings expand from button center
+    ringRefs.current.forEach((ring, i) => {
+      if (!ring) return
+      gsap.fromTo(ring,
+        { scale: 0.4, opacity: 0.95 },
+        {
+          scale: 9 + i * 4,
+          opacity: 0,
+          duration: 0.9 + i * 0.22,
+          delay: i * 0.15,
+          ease: 'power2.out',
+        }
+      )
     })
 
-    // Signal beam shoots upward
+    // Signal beam shoots upward — more dramatic
     if (beamRef.current) {
       gsap.fromTo(beamRef.current,
         { scaleY: 0, opacity: 1 },
-        { scaleY: 1, opacity: 0, duration: 0.85, ease: 'power3.out', transformOrigin: 'bottom center' }
+        { scaleY: 1, opacity: 0, duration: 1.1, ease: 'power3.out', transformOrigin: 'bottom center' }
       )
     }
 
     // Fade out form → show success
     setTimeout(() => {
       gsap.to(formRef.current, {
-        opacity: 0, y: -10, duration: 0.35, ease: 'power2.inOut',
+        opacity: 0, y: -12, duration: 0.38, ease: 'power2.inOut',
         onComplete: () => { setPhase('success'); setValues(INITIAL_VALUES) },
       })
-    }, 700)
+    }, 750)
 
     // Return to idle after 4.2s total
     setTimeout(() => {
@@ -373,7 +393,7 @@ export default function NeuralForm() {
             06 / Contact
           </div>
 
-          <h2 className="mx-auto mb-3 max-w-[10.75ch] font-['Syne'] text-[clamp(1.9rem,3.85vw,2.85rem)] font-extrabold leading-[1.03] text-slate-50">
+          <h2 className="mx-auto mb-3 max-w-[22ch] font-['Syne'] text-[clamp(1.75rem,3.5vw,2.65rem)] font-extrabold leading-[1.18] text-slate-50">
             Build the next intelligent system.
           </h2>
 
@@ -468,18 +488,44 @@ export default function NeuralForm() {
               <SignalField label="Channel"   fieldName="email"   value={values.email}   onChange={updateField} error={errors.email}   placeholder="signal@domain.ai" type="email" />
               <SignalField label="Payload"   fieldName="message" value={values.message} onChange={updateField} error={errors.message} placeholder="What do you want to build?" multiline />
 
-              <button
-                ref={buttonRef}
-                type="submit"
-                disabled={phase === 'sending'}
-                className="contact-send-btn w-full relative overflow-hidden px-5 py-3.5 font-['Space_Mono'] text-[13px] font-bold"
-              >
-                <div className="contact-send-sweep absolute inset-0 pointer-events-none" />
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {BTN_LABEL}
-                  <SendHorizontal size={15} strokeWidth={1.8} />
-                </span>
-              </button>
+              <div className="relative w-full" style={{ overflow: 'visible' }}>
+                {/* Burst rings — overflow visible so they can expand beyond button bounds */}
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  style={{ overflow: 'visible', zIndex: 30 }}
+                >
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      ref={el => ringRefs.current[i] = el}
+                      className="absolute rounded-full opacity-0"
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        border: `${i === 0 ? '2px' : '1.5px'} solid ${
+                          i === 2 ? 'rgba(139,92,246,0.9)' : 'rgba(0,212,255,0.9)'
+                        }`,
+                        boxShadow: i === 2
+                          ? '0 0 14px rgba(139,92,246,0.5)'
+                          : `0 0 ${10 + i * 6}px rgba(0,212,255,0.55)`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  ref={buttonRef}
+                  type="submit"
+                  disabled={phase === 'sending'}
+                  className="contact-send-btn w-full relative overflow-hidden px-5 py-3.5 font-['Space_Mono'] text-[13px] font-bold"
+                >
+                  <div className="contact-send-sweep absolute inset-0 pointer-events-none" />
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    {BTN_LABEL}
+                    <SendHorizontal size={15} strokeWidth={1.8} />
+                  </span>
+                </button>
+              </div>
             </form>
 
             {/* ── Success panel ── */}
