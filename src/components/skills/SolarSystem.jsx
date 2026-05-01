@@ -5,7 +5,6 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 import { skills } from '../../data/skills'
 import { setSelectedSkill, useSelectedSkill } from './skillsStore'
-import { useSectionProgress } from '../shared/ScrollManager'
 
 const ORBIT_SCALE = 0.86
 const PLANET_SCALE = 1.02
@@ -13,6 +12,19 @@ const CLOSE_CAMERA = new THREE.Vector3(0, 3.2, 9.5)
 const WIDE_CAMERA = new THREE.Vector3(0, 18.5, 40)
 const CLOSE_LOOK_AT = new THREE.Vector3(0, 0.18, 0)
 const WIDE_LOOK_AT = new THREE.Vector3(0, 0, 0)
+
+function clamp(value, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function getSkillsViewportProgress() {
+  const section = document.getElementById('skills')
+  if (!section) return 0
+
+  const start = section.offsetTop
+  const span = Math.max(1, window.innerHeight * 0.58)
+  return clamp((window.scrollY - start) / span)
+}
 
 // ─── GLSL: Stefan Gustavson's simplex noise ───────────────────────────────────
 const SIMPLEX_GLSL = /* glsl */`
@@ -366,17 +378,12 @@ function OrbitRing({ radius }) {
 export default function SolarSystem() {
   const { camera } = useThree()
   const [selectedSkill] = useSelectedSkill()
-  const sectionProgress = useSectionProgress(3)
   const timeRef = useRef(0)
   const cameraPos = useRef(CLOSE_CAMERA.clone())
   const lookAtTarget = useRef(CLOSE_LOOK_AT.clone())
   const scrollProgressRef = useRef(0)
   const targetCamera = useRef(CLOSE_CAMERA.clone())
   const targetLookAt = useRef(CLOSE_LOOK_AT.clone())
-
-  useEffect(() => {
-    scrollProgressRef.current = sectionProgress
-  }, [sectionProgress])
 
   // Stagger phases so planets don't start on top of each other
   const phases = useMemo(
@@ -386,6 +393,7 @@ export default function SolarSystem() {
 
   // Set camera to overview on mount
   useEffect(() => {
+    scrollProgressRef.current = getSkillsViewportProgress()
     camera.position.copy(CLOSE_CAMERA)
     camera.lookAt(CLOSE_LOOK_AT)
     cameraPos.current.copy(CLOSE_CAMERA)
@@ -397,6 +405,20 @@ export default function SolarSystem() {
       setSelectedSkill(null)
     }
   }, [camera])
+
+  useEffect(() => {
+    function updateProgress() {
+      scrollProgressRef.current = getSkillsViewportProgress()
+    }
+
+    updateProgress()
+    window.addEventListener('scroll', updateProgress, { passive: true })
+    window.addEventListener('resize', updateProgress)
+    return () => {
+      window.removeEventListener('scroll', updateProgress)
+      window.removeEventListener('resize', updateProgress)
+    }
+  }, [])
 
   // Escape key to deselect
   useEffect(() => {
