@@ -64,18 +64,6 @@ body {
   filter: drop-shadow(0 0 8px #00d4ff);
 }
 
-.contact-social-orbit .orbit-dot {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: #00d4ff;
-  box-shadow: 0 0 10px #00d4ff;
-  animation: contact-orbit 2.8s linear infinite;
-}
-
 @keyframes loss-draw {
   to { stroke-dashoffset: 0; }
 }
@@ -85,9 +73,121 @@ body {
   to { offset-distance: 100%; opacity: 1; }
 }
 
-@keyframes contact-orbit {
-  from { transform: rotate(0deg) translateX(28px) rotate(0deg); }
-  to { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
+/* ── Contact Section ─────────────────────────────────────────────── */
+
+@keyframes contactBorderShimmer {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes contactScanline {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 0.9; }
+  92%  { opacity: 0.3; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes contactStatusDotPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1);   box-shadow: 0 0 4px  var(--sc, #00d4ff); }
+  50%       { opacity: 1;   transform: scale(1.7); box-shadow: 0 0 11px var(--sc, #00d4ff); }
+}
+
+@keyframes contactNodeRipple {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0;   }
+}
+
+.contact-card-outer {
+  background: linear-gradient(
+    135deg,
+    rgba(0,212,255,0.32),
+    rgba(139,92,246,0.22),
+    rgba(0,0,0,0) 42%,
+    rgba(0,212,255,0.16),
+    rgba(139,92,246,0.14)
+  );
+  background-size: 300% 300%;
+  animation: contactBorderShimmer 9s ease infinite;
+  padding: 1px;
+  position: relative;
+}
+
+.contact-card-inner {
+  background:
+    radial-gradient(ellipse at 12% 6%,  rgba(0,212,255,0.065) 0%, transparent 48%),
+    radial-gradient(ellipse at 88% 94%, rgba(139,92,246,0.045) 0%, transparent 42%),
+    rgba(0, 0, 8, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  position: relative;
+  overflow: hidden;
+}
+
+.contact-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(0,212,255,0.14) 15%,
+    rgba(0,212,255,0.58) 50%,
+    rgba(0,212,255,0.14) 85%,
+    transparent 100%
+  );
+  animation: contactScanline 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 30;
+}
+
+/* Corner targeting brackets */
+.contact-corner {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  z-index: 20;
+}
+.contact-corner-tl { top: 0; left: 0;  border-top:    1.5px solid rgba(0,212,255,0.8); border-left:  1.5px solid rgba(0,212,255,0.8); }
+.contact-corner-tr { top: 0; right: 0; border-top:    1.5px solid rgba(0,212,255,0.8); border-right: 1.5px solid rgba(0,212,255,0.8); }
+.contact-corner-bl { bottom: 0; left: 0;  border-bottom: 1.5px solid rgba(0,212,255,0.8); border-left:  1.5px solid rgba(0,212,255,0.8); }
+.contact-corner-br { bottom: 0; right: 0; border-bottom: 1.5px solid rgba(0,212,255,0.8); border-right: 1.5px solid rgba(0,212,255,0.8); }
+
+/* Status indicator dot — pulses only in idle phase */
+.contact-status-dot {
+  animation: contactStatusDotPulse 2.2s ease-in-out infinite;
+}
+
+/* Send button */
+.contact-send-btn {
+  border: 1px solid rgba(0,212,255,0.45);
+  color: rgba(0,212,255,0.88);
+  background: transparent;
+  box-shadow: 0 0 16px rgba(0,212,255,0.07);
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+}
+
+.contact-send-btn:hover:not(:disabled) {
+  border-color: rgba(0,212,255,0.88);
+  color: #ffffff;
+  box-shadow: 0 0 28px rgba(0,212,255,0.22), inset 0 0 18px rgba(0,212,255,0.06);
+}
+
+.contact-send-btn:hover:not(:disabled) .contact-send-sweep {
+  transform: translateX(0%);
+}
+
+.contact-send-sweep {
+  background: linear-gradient(90deg, transparent 0%, rgba(0,212,255,0.08) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.45s ease;
+}
+
+.contact-send-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ── About Section ──────────────────────────────────────────────── */

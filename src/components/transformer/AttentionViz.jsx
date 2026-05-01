@@ -1,286 +1,268 @@
-import { useRef, useMemo, useState, useEffect } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
-import { Html } from '@react-three/drei'
-import * as THREE from 'three'
-import gsap from 'gsap'
+import { Fragment, useMemo } from 'react'
 
-const TOKENS = ['The', 'model', 'learns', 'context', 'very', 'well']
-const TOKEN_X = [-3, -1.8, -0.6, 0.6, 1.8, 3]
+const TOKENS = ['Data', 'Vision', 'Models', 'Systems', 'Product']
+const CX = 200
+const CY = 205
+const R = 138
 
-const ATTENTION = [
-  [0.40, 0.20, 0.15, 0.10, 0.10, 0.05],
-  [0.15, 0.35, 0.25, 0.15, 0.05, 0.05],
-  [0.10, 0.20, 0.30, 0.25, 0.10, 0.05],
-  [0.05, 0.10, 0.20, 0.35, 0.20, 0.10],
-  [0.05, 0.05, 0.10, 0.25, 0.35, 0.20],
-  [0.05, 0.05, 0.10, 0.15, 0.25, 0.40],
+function getPos(i) {
+  const angle = (-90 + i * 72) * (Math.PI / 180)
+  return {
+    x: +(CX + R * Math.cos(angle)).toFixed(2),
+    y: +(CY + R * Math.sin(angle)).toFixed(2),
+  }
+}
+
+const CONNECTIONS = [
+  { from: 0, to: 2, weight: 0.70 }, // Data → Models
+  { from: 1, to: 2, weight: 0.85 }, // Vision → Models
+  { from: 2, to: 3, weight: 0.90 }, // Models → Systems
+  { from: 2, to: 4, weight: 0.70 }, // Models → Product
+  { from: 3, to: 4, weight: 0.80 }, // Systems → Product
+  { from: 4, to: 0, weight: 0.60 }, // Product → Data
+  { from: 0, to: 1, weight: 0.50 }, // Data → Vision
 ]
 
-const LOW = new THREE.Color('#001a3e')
-const HIGH = new THREE.Color('#00d4ff')
+// Full 5×5 attention matrix [from][to]
+const ATTN = [
+  [0.15, 0.50, 0.70, 0.05, 0.08], // Data
+  [0.05, 0.10, 0.85, 0.05, 0.08], // Vision
+  [0.05, 0.05, 0.15, 0.90, 0.70], // Models
+  [0.05, 0.05, 0.08, 0.15, 0.80], // Systems
+  [0.60, 0.05, 0.08, 0.05, 0.12], // Product
+]
 
-function buildBeams() {
-  const out = []
-  for (let i = 0; i < 6; i++) {
-    for (let j = 0; j < 6; j++) {
-      const w = ATTENTION[i][j]
-      const curve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(TOKEN_X[i], 0, 0),
-        new THREE.Vector3((TOKEN_X[i] + TOKEN_X[j]) / 2, 0.5, 1.5),
-        new THREE.Vector3(TOKEN_X[j], 0, 3),
-      ])
-      const geometry = new THREE.TubeGeometry(curve, 20, w * 0.06, 8, false)
-      const material = new THREE.MeshBasicMaterial({
-        color: new THREE.Color().lerpColors(LOW, HIGH, w),
-        opacity: 0,
-        transparent: true,
-      })
-      out.push({ i, j, w, geometry, material, finalOpacity: Math.min(w * 1.5, 0.9) })
-    }
+function beamPath(fromIdx, toIdx) {
+  const p1 = getPos(fromIdx)
+  const p2 = getPos(toIdx)
+  const dx = p2.x - p1.x
+  const dy = p2.y - p1.y
+  const len = Math.hypot(dx, dy)
+  const nx = dx / len
+  const ny = dy / len
+  const off = 46
+  const sx = +(p1.x + nx * off).toFixed(1)
+  const sy = +(p1.y + ny * off).toFixed(1)
+  const ex = +(p2.x - nx * off).toFixed(1)
+  const ey = +(p2.y - ny * off).toFixed(1)
+  const mx = (sx + ex) / 2
+  const my = (sy + ey) / 2
+  const cpx = +(mx + (CX - mx) * 0.38).toFixed(1)
+  const cpy = +(my + (CY - my) * 0.38).toFixed(1)
+  return `M ${sx} ${sy} Q ${cpx} ${cpy} ${ex} ${ey}`
+}
+
+export default function AttentionViz({ activeToken, onTokenChange, isMobile }) {
+  const ai = TOKENS.indexOf(activeToken)
+
+  const paths = useMemo(() => CONNECTIONS.map(c => beamPath(c.from, c.to)), [])
+
+  function opacity(c) {
+    if (ai < 0) return 0.35
+    return (c.from === ai || c.to === ai) ? 1.0 : 0.06
   }
-  return out
-}
 
-function CameraRig() {
-  const { camera } = useThree()
-  const angle = useRef(0)
-  const target = useMemo(() => new THREE.Vector3(0, 0, 1.5), [])
+  function strokeW(c) {
+    const base = 1.2 + c.weight * 4.5
+    if (ai < 0) return base * 0.55
+    return (c.from === ai || c.to === ai) ? base : base * 0.2
+  }
 
-  useEffect(() => {
-    camera.position.set(0, 3, 8)
-    camera.lookAt(target)
-  }, [camera, target])
-
-  useFrame((_, delta) => {
-    angle.current += delta * 0.1
-    camera.position.x = Math.sin(angle.current) * 6.5
-    camera.position.z = 1.5 + Math.cos(angle.current) * 6.5
-    camera.position.y = 3
-    camera.lookAt(target)
-  })
-
-  return null
-}
-
-function TokenCube({ index, zRow, highlighted, onHover, onLeave }) {
   return (
-    <group position={[TOKEN_X[index], 0, zRow]}>
-      <mesh
-        onPointerOver={(e) => { e.stopPropagation(); onHover(index) }}
-        onPointerOut={onLeave}
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem' }}>
+      <svg
+        viewBox="0 0 400 410"
+        style={{ width: '100%', maxWidth: isMobile ? '300px' : '420px', height: 'auto', overflow: 'visible' }}
+        aria-label="Self-attention visualization"
       >
-        <boxGeometry args={[0.6, 0.6, 0.1]} />
-        <meshStandardMaterial
-          color="#001a3e"
-          emissive={highlighted ? '#f59e0b' : '#003366'}
-          emissiveIntensity={highlighted ? 1.8 : 0.5}
-        />
-      </mesh>
-      <Html center position={[0, -0.62, 0]}>
-        <span style={{
-          fontFamily: "'Space Mono', monospace",
-          fontSize: '0.7rem',
-          color: highlighted ? '#f59e0b' : '#67e8f9',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          transition: 'color 0.2s',
-          pointerEvents: 'none',
-        }}>
-          {TOKENS[index]}
-        </span>
-      </Html>
-    </group>
-  )
-}
+        <defs>
+          {/* Cyan glow */}
+          <filter id="tf-c" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          {/* Purple glow */}
+          <filter id="tf-p" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="7" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          {/* Center radial gradient */}
+          <radialGradient id="tf-cg" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+          </radialGradient>
+        </defs>
 
-function RowLabel({ text, color, position }) {
-  return (
-    <Html center position={position}>
-      <span style={{
-        fontFamily: "'Space Mono', monospace",
-        fontSize: '0.6rem',
-        color,
-        letterSpacing: '0.15em',
-        textTransform: 'uppercase',
-        opacity: 0.6,
-        userSelect: 'none',
-        pointerEvents: 'none',
-      }}>
-        {text}
-      </span>
-    </Html>
-  )
-}
+        {/* Orbit ring */}
+        <circle cx={CX} cy={CY} r={R + 18}
+          fill="none" stroke="rgba(0,212,255,0.07)" strokeWidth="1" strokeDasharray="3 7" />
 
-function AttentionBeams({ beams, hoveredToken }) {
-  const groupRefs = useRef([])
+        {/* Center glow + core dot */}
+        <circle cx={CX} cy={CY} r={44} fill="url(#tf-cg)" />
+        <circle cx={CX} cy={CY} r={4} fill="#8b5cf6" opacity="0.55" />
 
-  // Entrance animation: scale + opacity stagger
-  useEffect(() => {
-    const tweens = beams.map(({ material, finalOpacity }, idx) => {
-      const group = groupRefs.current[idx]
-      if (group) {
-        group.scale.set(0, 0, 0)
-        gsap.to(group.scale, {
-          x: 1, y: 1, z: 1,
-          duration: 0.35,
-          delay: idx * 0.04,
-          ease: 'back.out(1.5)',
-        })
-      }
-      return gsap.to(material, {
-        opacity: finalOpacity,
-        duration: 0.4,
-        delay: idx * 0.04,
-        ease: 'power2.out',
-      })
-    })
-    return () => tweens.forEach(t => t.kill())
-  }, [beams])
+        {/* Beam glow layer */}
+        {CONNECTIONS.map((c, i) => (
+          <path key={`bg${i}`}
+            d={paths[i]}
+            stroke="#00d4ff"
+            strokeWidth={strokeW(c) + 6}
+            fill="none"
+            opacity={opacity(c) * 0.1}
+            style={{ transition: 'opacity 0.45s ease', filter: 'blur(2px)' }}
+          />
+        ))}
 
-  // Hover: dim non-attended beams
-  useEffect(() => {
-    beams.forEach(({ i, material, finalOpacity }) => {
-      const target = hoveredToken === null
-        ? finalOpacity
-        : i === hoveredToken ? finalOpacity : 0.03
-      gsap.killTweensOf(material)
-      gsap.to(material, { opacity: target, duration: 0.2 })
-    })
-  }, [hoveredToken, beams])
+        {/* Beam main layer */}
+        {CONNECTIONS.map((c, i) => (
+          <path key={`bm${i}`}
+            d={paths[i]}
+            stroke="#00d4ff"
+            strokeWidth={strokeW(c)}
+            fill="none"
+            opacity={opacity(c)}
+            strokeLinecap="round"
+            style={{ transition: 'opacity 0.45s ease, stroke-width 0.45s ease' }}
+          />
+        ))}
 
-  return (
-    <>
-      {beams.map(({ geometry, material }, idx) => (
-        <group key={idx} ref={el => { groupRefs.current[idx] = el }}>
-          <mesh geometry={geometry} material={material} />
-        </group>
-      ))}
-    </>
-  )
-}
+        {/* Signal pulses on active outgoing beams */}
+        {CONNECTIONS.map((c, i) => c.from !== ai ? null : (
+          <circle key={`sp${i}`} r="3.5" fill="#00d4ff" opacity="0.92" filter="url(#tf-c)">
+            <animateMotion
+              dur={`${1.4 + (1 - c.weight) * 0.9}s`}
+              repeatCount="indefinite"
+              path={paths[i]}
+            />
+          </circle>
+        ))}
 
-function TorusKnot() {
-  const ref = useRef()
+        {/* Token nodes */}
+        {TOKENS.map((tok, i) => {
+          const { x, y } = getPos(i)
+          const active = i === ai
+          return (
+            <g key={tok} style={{ cursor: 'pointer' }}>
+              {/* Invisible hit area */}
+              <rect
+                x={x - 52} y={y - 27} width={104} height={54}
+                fill="rgba(0,0,0,0.001)"
+                onClick={() => onTokenChange(tok)}
+                onMouseEnter={() => onTokenChange(tok)}
+              />
 
-  useFrame((_, delta) => {
-    if (!ref.current) return
-    ref.current.rotation.x += delta * 0.3
-    ref.current.rotation.y += delta * 0.5
-    ref.current.rotation.z += delta * 0.2
-  })
+              {/* Breathing halo on active */}
+              {active && (
+                <ellipse cx={x} cy={y} rx={56} ry={27}
+                  fill="#8b5cf6" opacity="0" filter="url(#tf-p)">
+                  <animate attributeName="opacity"
+                    values="0.06;0.22;0.06" dur="2.8s" repeatCount="indefinite" />
+                </ellipse>
+              )}
 
-  return (
-    <group position={[0, 0, 1.5]}>
-      <mesh ref={ref}>
-        <torusKnotGeometry args={[0.6, 0.15, 100, 16]} />
-        <meshStandardMaterial
-          color="#1a0033"
-          emissive="#8b5cf6"
-          emissiveIntensity={1.5}
-          roughness={0.1}
-          metalness={0.9}
-        />
-      </mesh>
-      <Html center position={[0, 1.25, 0]}>
-        <span style={{
-          fontFamily: "'Space Mono', monospace",
-          fontSize: '0.6rem',
-          color: '#a78bfa',
-          letterSpacing: '0.15em',
-          textTransform: 'uppercase',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-          pointerEvents: 'none',
-          textShadow: '0 0 8px rgba(139,92,246,0.8)',
-        }}>
-          Attention Head
-        </span>
-      </Html>
-    </group>
-  )
-}
+              {/* Card body */}
+              <rect
+                x={x - 43} y={y - 18} width={86} height={36} rx={7}
+                fill={active ? 'rgba(40,0,72,0.94)' : 'rgba(0,8,28,0.88)'}
+                stroke={active ? '#8b5cf6' : 'rgba(0,212,255,0.3)'}
+                strokeWidth={active ? 1.5 : 1}
+                style={{ transition: 'fill 0.3s ease, stroke 0.3s ease' }}
+              />
 
-export default function AttentionViz() {
-  const [hoveredToken, setHoveredToken] = useState(null)
-  const beams = useMemo(() => buildBeams(), [])
+              {/* Token label */}
+              <text
+                x={x} y={y + 6}
+                textAnchor="middle"
+                fill={active ? '#c4b5fd' : '#67e8f9'}
+                fontSize={active ? 13 : 12}
+                fontFamily="'Space Mono', monospace"
+                letterSpacing="1.5"
+                fontWeight={active ? '700' : '400'}
+                filter={active ? 'url(#tf-p)' : undefined}
+                style={{ transition: 'fill 0.3s ease', userSelect: 'none', pointerEvents: 'none' }}
+              >
+                {tok.toUpperCase()}
+              </text>
 
-  const mostAttended = hoveredToken !== null
-    ? ATTENTION[hoveredToken].indexOf(Math.max(...ATTENTION[hoveredToken]))
-    : null
+              {/* Active indicator */}
+              {active && (
+                <circle cx={x} cy={y + 23} r={2.5} fill="#8b5cf6" opacity="0.85" />
+              )}
+            </g>
+          )
+        })}
+      </svg>
 
-  // Dispose on unmount
-  useEffect(() => {
-    return () => {
-      beams.forEach(({ geometry, material }) => {
-        geometry.dispose()
-        material.dispose()
-      })
-    }
-  }, [beams])
-
-  return (
-    <>
-      <CameraRig />
-
-      <ambientLight intensity={0.15} />
-      <pointLight position={[0, 5, 1.5]} intensity={2} color="#8b5cf6" />
-      <pointLight position={[0, -2, 1.5]} intensity={1} color="#00d4ff" />
-      <pointLight position={[-4, 2, 0]} intensity={0.6} color="#00d4ff" />
-      <pointLight position={[4, 2, 3]} intensity={0.6} color="#8b5cf6" />
-
-      {/* Query row — z=0, interactive */}
-      {TOKENS.map((_, i) => (
-        <TokenCube
-          key={`q-${i}`}
-          index={i}
-          zRow={0}
-          highlighted={hoveredToken === i}
-          onHover={setHoveredToken}
-          onLeave={() => setHoveredToken(null)}
-        />
-      ))}
-      <RowLabel text="Query" color="#00d4ff" position={[-4.2, 0, 0]} />
-
-      {/* Key row — z=3, decorative */}
-      {TOKENS.map((_, i) => (
-        <TokenCube
-          key={`k-${i}`}
-          index={i}
-          zRow={3}
-          highlighted={false}
-          onHover={() => {}}
-          onLeave={() => {}}
-        />
-      ))}
-      <RowLabel text="Key" color="#8b5cf6" position={[-4.2, 0, 3]} />
-
-      {/* 36 attention beams */}
-      <AttentionBeams beams={beams} hoveredToken={hoveredToken} />
-
-      {/* Attention head centerpiece */}
-      <TorusKnot />
-
-      {/* Hover tooltip */}
-      {hoveredToken !== null && mostAttended !== null && (
-        <Html position={[TOKEN_X[hoveredToken], 1.6, 0]} center>
+      {/* Attention heatmap — desktop only */}
+      {!isMobile && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignSelf: 'center' }}>
           <div style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '0.65rem',
-            color: '#e2e8f0',
-            background: 'rgba(0,0,8,0.88)',
-            border: '1px solid rgba(245,158,11,0.45)',
-            borderRadius: '6px',
-            padding: '6px 12px',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-            boxShadow: '0 0 12px rgba(245,158,11,0.15)',
+            fontFamily: 'Space Mono, monospace',
+            fontSize: '0.52rem',
+            color: 'rgba(226,232,240,0.25)',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            marginBottom: '0.1rem',
           }}>
-            Attends most to:{' '}
-            <span style={{ color: '#f59e0b' }}>"{TOKENS[mostAttended]}"</span>
+            Attention Matrix
           </div>
-        </Html>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '28px repeat(5, 30px)',
+            gridTemplateRows: '18px repeat(5, 28px)',
+            gap: '3px',
+          }}>
+            {/* Corner cell */}
+            <div />
+
+            {/* Column headers */}
+            {TOKENS.map((t, ci) => (
+              <div key={t} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'Space Mono, monospace',
+                fontSize: '0.46rem',
+                color: ci === ai ? 'rgba(139,92,246,0.75)' : 'rgba(0,212,255,0.36)',
+                transition: 'color 0.3s ease',
+              }}>
+                {t.slice(0, 2).toUpperCase()}
+              </div>
+            ))}
+
+            {/* Data rows */}
+            {TOKENS.map((_, ri) => (
+              <Fragment key={ri}>
+                <div style={{
+                  display: 'flex', alignItems: 'center',
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: '0.46rem',
+                  color: ri === ai ? 'rgba(139,92,246,0.75)' : 'rgba(0,212,255,0.36)',
+                  transition: 'color 0.3s ease',
+                }}>
+                  {TOKENS[ri].slice(0, 2).toUpperCase()}
+                </div>
+                {ATTN[ri].map((w, ci) => (
+                  <div key={ci} style={{
+                    borderRadius: '3px',
+                    background: `rgba(0,212,255,${0.04 + w * 0.84})`,
+                    border: (ri === ai || ci === ai)
+                      ? '1px solid rgba(139,92,246,0.45)'
+                      : '1px solid rgba(0,212,255,0.05)',
+                    boxShadow: (ri === ai && ci === ai) ? '0 0 7px rgba(0,212,255,0.35)' : 'none',
+                    transition: 'all 0.35s ease',
+                  }} />
+                ))}
+              </Fragment>
+            ))}
+          </div>
+        </div>
       )}
-    </>
+    </div>
   )
 }

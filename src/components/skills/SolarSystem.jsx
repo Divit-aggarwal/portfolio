@@ -199,9 +199,17 @@ function Moon({ name, index, total, planetSpeed, planetColor, timeRef }) {
 
 // ─── Planet ──────────────────────────────────────────────────────────────────
 function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
-  const groupRef = useRef()
-  const meshRef = useRef()
-  const texture = useMemo(() => makeCanvasTexture(skill.name, skill.color), [skill])
+  const groupRef   = useRef()
+  const meshRef    = useRef()
+  const hoveredRef = useRef(false)
+  const texture    = useMemo(() => makeCanvasTexture(skill.name, skill.color), [skill])
+
+  // Keep scale in sync when selection changes
+  useEffect(() => {
+    if (!meshRef.current) return
+    const s = isSelected ? 1.5 : 1
+    gsap.to(meshRef.current.scale, { x: s, y: s, z: s, duration: 0.35, ease: 'back.out(1.5)' })
+  }, [isSelected])
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
@@ -211,16 +219,28 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
       0,
       Math.sin(t * skill.speed + phase) * skill.orbit,
     )
-    // Gentle self-rotation
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.4
   })
 
   function handleClick(e) {
     e.stopPropagation()
-    if (isSelected) {
-      onDeselect()
-    } else {
-      onSelect(skill, groupRef.current.position)
+    if (isSelected) { onDeselect() } else { onSelect(skill, groupRef.current.position) }
+  }
+
+  function handlePointerOver(e) {
+    e.stopPropagation()
+    document.body.style.cursor = 'pointer'
+    if (!isSelected && meshRef.current) {
+      hoveredRef.current = true
+      gsap.to(meshRef.current.scale, { x: 1.55, y: 1.55, z: 1.55, duration: 0.28, ease: 'back.out(2)' })
+    }
+  }
+
+  function handlePointerOut() {
+    document.body.style.cursor = 'auto'
+    if (!isSelected && meshRef.current) {
+      hoveredRef.current = false
+      gsap.to(meshRef.current.scale, { x: 1, y: 1, z: 1, duration: 0.22, ease: 'power2.out' })
     }
   }
 
@@ -229,17 +249,16 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
       <mesh
         ref={meshRef}
         onClick={handleClick}
-        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }}
-        onPointerOut={() => { document.body.style.cursor = 'auto' }}
-        scale={isSelected ? 1.35 : 1}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
       >
         <sphereGeometry args={[skill.size, 32, 32]} />
         <meshStandardMaterial
           map={texture}
           color={skill.color}
           emissive={skill.color}
-          emissiveIntensity={isSelected ? 0.5 : 0.1}
-          roughness={0.7}
+          emissiveIntensity={isSelected ? 0.55 : 0.18}
+          roughness={0.65}
           metalness={0.1}
         />
       </mesh>
@@ -260,15 +279,19 @@ function Planet({ skill, phase, timeRef, isSelected, onSelect, onDeselect }) {
       {/* Label */}
       <Html
         distanceFactor={12}
-        position={[0, skill.size + 0.25, 0]}
+        position={[0, skill.size + 0.32, 0]}
         style={{ pointerEvents: 'none' }}
       >
         <div style={{
           fontFamily: 'Space Mono, monospace',
-          fontSize: '10px',
-          color: isSelected ? skill.color : 'rgba(226,232,240,0.6)',
+          fontSize: '11px',
+          fontWeight: 700,
+          color: isSelected ? skill.color : 'rgba(226,232,240,0.82)',
           whiteSpace: 'nowrap',
-          textShadow: isSelected ? `0 0 8px ${skill.color}` : 'none',
+          textShadow: isSelected
+            ? `0 0 10px ${skill.color}, 0 0 20px ${skill.color}`
+            : '0 0 6px rgba(0,0,0,0.9)',
+          letterSpacing: '0.04em',
           transition: 'color 0.3s',
         }}>
           {skill.name}
@@ -293,7 +316,7 @@ export default function SolarSystem() {
   const { camera } = useThree()
   const [selectedSkill] = useSelectedSkill()
   const timeRef = useRef(0)
-  const cameraPos = useRef(new THREE.Vector3(0, 10, 20))
+  const cameraPos = useRef(new THREE.Vector3(0, 20, 44))
   const lookAtTarget = useRef(new THREE.Vector3(0, 0, 0))
 
   // Stagger phases so planets don't start on top of each other
@@ -304,8 +327,8 @@ export default function SolarSystem() {
 
   // Set camera to overview on mount
   useEffect(() => {
-    gsap.to(camera.position, { x: 0, y: 10, z: 20, duration: 1.4, ease: 'power2.out' })
-    cameraPos.current.set(0, 10, 20)
+    gsap.to(camera.position, { x: 0, y: 20, z: 44, duration: 1.4, ease: 'power2.out' })
+    cameraPos.current.set(0, 20, 44)
     return () => {
       gsap.killTweensOf(camera.position)
       gsap.killTweensOf(lookAtTarget.current)
@@ -342,7 +365,7 @@ export default function SolarSystem() {
 
   function handleDeselect() {
     setSelectedSkill(null)
-    gsap.to(cameraPos.current, { x: 0, y: 10, z: 20, duration: 1.3, ease: 'power2.inOut' })
+    gsap.to(cameraPos.current, { x: 0, y: 16, z: 34, duration: 1.3, ease: 'power2.inOut' })
     gsap.to(lookAtTarget.current, { x: 0, y: 0, z: 0, duration: 1.3, ease: 'power2.inOut' })
   }
 
