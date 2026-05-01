@@ -3,9 +3,9 @@ import { useSectionProgress } from '../shared/ScrollManager'
 const TIMELINE_ITEMS = [
   {
     period: '2023-2024',
-    title: 'Cybersecurity in school',
+    title: 'Cybersecurity',
     kicker: 'Systems, networks, and security fundamentals',
-    body: 'Started by exploring cybersecurity concepts in school: networks, Linux, vulnerabilities, defensive thinking, and how real attacks are prevented.',
+    body: 'Started by exploring cybersecurity concepts: networks, Linux, vulnerabilities, defensive thinking, and how real attacks are prevented.',
     tags: ['Cybersecurity', 'Networks', 'Linux'],
   },
   {

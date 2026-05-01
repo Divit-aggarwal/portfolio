@@ -32,12 +32,13 @@ function SelectedPanel({ skill }) {
         transform: 'translateY(-50%)',
         zIndex: 20,
         width: '280px',
-        background: 'rgba(0, 0, 8, 0.82)',
+        background: 'linear-gradient(180deg, rgba(5, 8, 24, 0.9), rgba(0, 0, 8, 0.82))',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         border: `1px solid ${skill.color}44`,
-        borderRadius: '16px',
+        borderRadius: '8px',
         padding: '1.75rem',
+        boxShadow: `0 24px 80px rgba(0,0,0,0.42), 0 0 40px ${skill.color}18`,
         animation: 'panel-slide-in 0.35s cubic-bezier(0.22,1,0.36,1)',
       }}
     >
@@ -138,7 +139,7 @@ function SelectedPanel({ skill }) {
         color: 'rgba(226,232,240,0.25)',
         letterSpacing: '0.08em',
       }}>
-        Press Esc or click planet to close
+        Press Esc to return to orbit view
       </div>
     </div>
   )
@@ -180,17 +181,6 @@ export default function SkillsSection() {
         }}>
           Tech Universe
         </h2>
-        {!selectedSkill && (
-          <p style={{
-            fontFamily: 'Space Mono, monospace',
-            fontSize: '0.7rem',
-            color: 'rgba(226,232,240,0.35)',
-            marginTop: '0.5rem',
-            letterSpacing: '0.05em',
-          }}>
-            Click a planet to explore
-          </p>
-        )}
       </div>
 
       {/* Selected skill panel */}

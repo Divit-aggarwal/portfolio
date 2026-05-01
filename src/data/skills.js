@@ -8,6 +8,7 @@ export const skills = [
     proficiency: 95,
     years: 3,
     moons: ['NumPy', 'Pandas', 'Matplotlib'],
+    docs: 'https://docs.python.org/3/',
   },
   {
     name: 'PyTorch',
@@ -18,6 +19,7 @@ export const skills = [
     proficiency: 85,
     years: 2,
     moons: ['Lightning', 'TorchVision'],
+    docs: 'https://pytorch.org/docs/stable/index.html',
   },
   {
     name: 'TensorFlow',
@@ -28,6 +30,7 @@ export const skills = [
     proficiency: 75,
     years: 2,
     moons: ['Keras', 'TFX'],
+    docs: 'https://www.tensorflow.org/api_docs',
   },
   {
     name: 'Sklearn',
@@ -38,6 +41,7 @@ export const skills = [
     proficiency: 90,
     years: 3,
     moons: ['Pipeline', 'GridSearch'],
+    docs: 'https://scikit-learn.org/stable/user_guide.html',
   },
   {
     name: 'SQL',
@@ -48,6 +52,7 @@ export const skills = [
     proficiency: 80,
     years: 2,
     moons: ['PostgreSQL', 'BigQuery'],
+    docs: 'https://www.postgresql.org/docs/',
   },
   {
     name: 'Docker',
@@ -58,6 +63,7 @@ export const skills = [
     proficiency: 70,
     years: 1,
     moons: ['K8s', 'Compose'],
+    docs: 'https://docs.docker.com/',
   },
   {
     name: 'React',
@@ -68,6 +74,7 @@ export const skills = [
     proficiency: 72,
     years: 2,
     moons: ['Three.js', 'Vite', 'Tailwind'],
+    docs: 'https://react.dev/reference/react',
   },
   {
     name: 'FastAPI',
@@ -78,6 +85,7 @@ export const skills = [
     proficiency: 80,
     years: 2,
     moons: ['Uvicorn', 'Pydantic'],
+    docs: 'https://fastapi.tiangolo.com/',
   },
   {
     name: 'HuggingFace',
@@ -88,6 +96,7 @@ export const skills = [
     proficiency: 82,
     years: 2,
     moons: ['Transformers', 'Datasets', 'PEFT'],
+    docs: 'https://huggingface.co/docs/transformers',
   },
   {
     name: 'LangChain',
@@ -98,6 +107,7 @@ export const skills = [
     proficiency: 70,
     years: 1,
     moons: ['RAG', 'Agents'],
+    docs: 'https://python.langchain.com/docs/introduction/',
   },
   {
     name: 'AWS',
@@ -108,6 +118,7 @@ export const skills = [
     proficiency: 65,
     years: 1,
     moons: ['S3', 'EC2', 'SageMaker'],
+    docs: 'https://docs.aws.amazon.com/',
   },
   {
     name: 'MLflow',
@@ -118,6 +129,7 @@ export const skills = [
     proficiency: 75,
     years: 1,
     moons: ['Experiments', 'Registry'],
+    docs: 'https://mlflow.org/docs/latest/index.html',
   },
   {
     name: 'OpenCV',
@@ -128,6 +140,7 @@ export const skills = [
     proficiency: 82,
     years: 2,
     moons: ['SIFT', 'Haar'],
+    docs: 'https://docs.opencv.org/4.x/',
   },
   {
     name: 'Spark',
@@ -138,6 +151,7 @@ export const skills = [
     proficiency: 68,
     years: 1,
     moons: ['MLlib', 'Streaming'],
+    docs: 'https://spark.apache.org/docs/latest/',
   },
   {
     name: 'CUDA',
@@ -148,6 +162,7 @@ export const skills = [
     proficiency: 60,
     years: 1,
     moons: ['cuDNN', 'Thrust'],
+    docs: 'https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html',
   },
   {
     name: 'Streamlit',
@@ -158,6 +173,7 @@ export const skills = [
     proficiency: 85,
     years: 2,
     moons: ['Plotly', 'Altair'],
+    docs: 'https://docs.streamlit.io/',
   },
   {
     name: 'Redis',
@@ -168,5 +184,61 @@ export const skills = [
     proficiency: 72,
     years: 1,
     moons: ['Cache', 'Pub/Sub'],
+    docs: 'https://redis.io/docs/latest/',
+  },
+  {
+    name: 'XGBoost',
+    orbit: 23.8,
+    speed: 0.18,
+    size: 0.36,
+    color: '#ff7f0e',
+    proficiency: 82,
+    years: 2,
+    moons: ['Boosting', 'Trees', 'SHAP'],
+    docs: 'https://xgboost.readthedocs.io/',
+  },
+  {
+    name: 'JAX',
+    orbit: 25.0,
+    speed: 0.12,
+    size: 0.34,
+    color: '#a855f7',
+    proficiency: 62,
+    years: 1,
+    moons: ['Autograd', 'JIT', 'Flax'],
+    docs: 'https://jax.readthedocs.io/',
+  },
+  {
+    name: 'W&B',
+    orbit: 26.2,
+    speed: 0.20,
+    size: 0.34,
+    color: '#ffbe00',
+    proficiency: 72,
+    years: 1,
+    moons: ['Tracking', 'Sweeps', 'Artifacts'],
+    docs: 'https://docs.wandb.ai/',
+  },
+  {
+    name: 'Statsmodels',
+    orbit: 27.4,
+    speed: 0.15,
+    size: 0.32,
+    color: '#4f46e5',
+    proficiency: 70,
+    years: 1,
+    moons: ['Regression', 'Time Series'],
+    docs: 'https://www.statsmodels.org/stable/index.html',
+  },
+  {
+    name: 'Airflow',
+    orbit: 28.6,
+    speed: 0.16,
+    size: 0.34,
+    color: '#017cee',
+    proficiency: 65,
+    years: 1,
+    moons: ['DAGs', 'ETL', 'Pipelines'],
+    docs: 'https://airflow.apache.org/docs/',
   },
 ]

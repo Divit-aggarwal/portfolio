@@ -114,9 +114,7 @@ function CentralNode({ x, y }) {
             lineHeight: 1.25,
           }}
         >
-          Divit
-          <br />
-          Aggarwal
+          Projects
         </div>
         <div
           style={{
