@@ -1,11 +1,10 @@
 import { useScene } from '../../hooks/useScene'
 
-const SECTIONS = ['Hero', 'About', 'Projects', 'Skills', 'Transformer', 'Contact']
-const TOTAL_HEIGHT = 600 // vh
+const SECTIONS = ['Hero', 'About', 'Projects', 'Skills', 'Timeline', 'Transformer', 'Contact']
 
 function scrollToSection(index) {
-  const target = (index / SECTIONS.length) * document.documentElement.scrollHeight
-  window.scrollTo({ top: target, behavior: 'smooth' })
+  const section = document.getElementById(SECTIONS[index].toLowerCase())
+  section?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 export default function Navigation() {
@@ -17,7 +16,7 @@ export default function Navigation() {
         <button
           key={name}
           onClick={() => scrollToSection(i)}
-          className="group relative flex items-center justify-end gap-3"
+          className="group relative flex items-center justify-end gap-3 border-0 bg-transparent p-0"
           aria-label={`Go to ${name}`}
         >
           {/* Tooltip label */}

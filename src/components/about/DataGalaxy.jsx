@@ -160,6 +160,7 @@ export default function DataGalaxy() {
   const shuffleTimer   = useRef(null)
   const { currentSection } = useScene()
   const sectionProgress = useSectionProgress(1)
+  const hasEnteredSection = sectionProgress > 0
   const isMobile = useIsMobile()
   const particleCount = isMobile ? 800 : 2000
 
@@ -229,7 +230,7 @@ export default function DataGalaxy() {
 
   // ── Entry animation ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (sectionProgress > 0) {
+    if (hasEnteredSection) {
       gsap.to(progressRef.current, {
         value: 1,
         duration: 1.5,
@@ -244,7 +245,7 @@ export default function DataGalaxy() {
       progressRef.current.value = 0
       if (particleMatRef.current) particleMatRef.current.uniforms.uProgress.value = 0
     }
-  }, [sectionProgress > 0])
+  }, [hasEnteredSection])
 
   // ── Shuffle every 10 s ───────────────────────────────────────────────────
   useEffect(() => {
@@ -287,7 +288,7 @@ export default function DataGalaxy() {
     pathLines.forEach(l => { l.geometry.dispose(); l.material.dispose() })
     glowTex.dispose()
     document.body.style.cursor = ''
-  }, [])
+  }, [glowTex, intraGeos, particleGeo, pathLines])
 
   // ── Frame loop ───────────────────────────────────────────────────────────
   useFrame((_, delta) => {

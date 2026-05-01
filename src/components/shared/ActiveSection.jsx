@@ -1,5 +1,4 @@
 import { lazy, Suspense, useRef, useEffect, useState } from 'react'
-import { useFrame } from '@react-three/fiber'
 import gsap from 'gsap'
 import { useScene } from '../../hooks/useScene'
 
@@ -8,6 +7,7 @@ const SCENES = [
   lazy(() => import('../about/AboutScene')),
   lazy(() => import('../projects/ProjectsScene')),
   lazy(() => import('../skills/SkillsScene')),
+  lazy(() => import('../timeline/TimelineScene')),
   lazy(() => import('../transformer/TransformerScene')),
   lazy(() => import('../contact/ContactScene')),
 ]

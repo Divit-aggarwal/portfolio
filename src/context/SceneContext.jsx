@@ -6,6 +6,21 @@ gsap.registerPlugin(ScrollTrigger)
 
 export const SceneContext = createContext(null)
 
+const SECTION_IDS = ['hero', 'about', 'projects', 'skills', 'timeline', 'transformer', 'contact']
+
+function getCurrentSectionFromScroll() {
+  const viewportAnchor = window.scrollY + window.innerHeight * 0.42
+  let active = 0
+
+  SECTION_IDS.forEach((id, index) => {
+    const section = document.getElementById(id)
+    if (!section) return
+    if (viewportAnchor >= section.offsetTop) active = index
+  })
+
+  return Math.min(SECTION_IDS.length - 1, active)
+}
+
 export function SceneProvider({ children }) {
   const [currentSection, setCurrentSectionState] = useState(0)
   const [scrollProgress, setScrollProgress] = useState(0)
@@ -14,7 +29,7 @@ export function SceneProvider({ children }) {
   const prevSection = useRef(0)
 
   const setSection = useCallback((index) => {
-    const clamped = Math.max(0, Math.min(5, index))
+    const clamped = Math.max(0, Math.min(6, index))
     if (clamped === prevSection.current) return
     prevSection.current = clamped
     setIsTransitioning(true)
@@ -31,11 +46,11 @@ export function SceneProvider({ children }) {
       onUpdate: (self) => {
         const progress = self.progress
         setScrollProgress(progress)
-        const section = Math.min(5, Math.floor(progress * 6))
-        setSection(section)
+        setSection(getCurrentSectionFromScroll())
       },
     })
 
+    setSection(getCurrentSectionFromScroll())
     return () => {
       trigger.kill()
       clearTimeout(transitionTimer.current)

@@ -10,10 +10,14 @@ import HeroSection from './components/hero/HeroSection'
 import AboutSection from './components/about/AboutSection'
 import ProjectsSection from './components/projects/ProjectsSection'
 import SkillsSection from './components/skills/SkillsSection'
+import TimelineSection from './components/timeline/TimelineSection'
 import TransformerSection from './components/transformer/TransformerSection'
 import NeuralForm from './components/contact/NeuralForm'
 
-const SECTION_IDS = ['hero', 'about', 'projects', 'skills', 'transformer', 'contact']
+const SECTION_IDS = ['hero', 'about', 'projects', 'skills', 'timeline', 'transformer', 'contact']
+const SECTION_HEIGHTS = {
+  timeline: '360vh',
+}
 
 function SectionOverlays() {
   const { currentSection } = useScene()
@@ -21,8 +25,9 @@ function SectionOverlays() {
   if (currentSection === 1) return <AboutSection />
   if (currentSection === 2) return <ProjectsSection />
   if (currentSection === 3) return <SkillsSection />
-  if (currentSection === 4) return <TransformerSection />
-  if (currentSection === 5) return <NeuralForm />
+  if (currentSection === 4) return <TimelineSection />
+  if (currentSection === 5) return <TransformerSection />
+  if (currentSection === 6) return <NeuralForm />
   return null
 }
 
@@ -46,7 +51,7 @@ export default function App() {
       {/* Section-specific 2D overlays */}
       <SectionOverlays />
 
-      {/* Transparent 600vh scroll container — 3D canvas shows through */}
+      {/* Transparent scroll container — 3D canvas shows through */}
       <div
         style={{
           position: 'relative',
@@ -59,7 +64,7 @@ export default function App() {
           <section
             key={id}
             id={id}
-            style={{ height: '100vh', background: 'transparent' }}
+            style={{ height: SECTION_HEIGHTS[id] ?? '100vh', background: 'transparent' }}
           />
         ))}
       </div>

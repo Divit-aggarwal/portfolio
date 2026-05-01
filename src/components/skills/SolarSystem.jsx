@@ -173,7 +173,7 @@ function Sun() {
 }
 
 // ─── Moon ────────────────────────────────────────────────────────────────────
-function Moon({ name, index, total, planetSpeed, planetColor, timeRef }) {
+function Moon({ index, total, planetSpeed, planetColor, timeRef }) {
   const ref = useRef()
   const phase = (index / total) * Math.PI * 2
   const speed = planetSpeed * 3
@@ -327,11 +327,12 @@ export default function SolarSystem() {
 
   // Set camera to overview on mount
   useEffect(() => {
+    const target = lookAtTarget.current
     gsap.to(camera.position, { x: 0, y: 20, z: 44, duration: 1.4, ease: 'power2.out' })
     cameraPos.current.set(0, 20, 44)
     return () => {
       gsap.killTweensOf(camera.position)
-      gsap.killTweensOf(lookAtTarget.current)
+      gsap.killTweensOf(target)
       camera.position.set(0, 0, 8)
       camera.lookAt(0, 0, 0)
       setSelectedSkill(null)

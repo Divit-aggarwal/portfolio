@@ -4,7 +4,20 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const SECTION_COUNT = 6
+const SECTION_IDS = ['hero', 'about', 'projects', 'skills', 'timeline', 'transformer', 'contact']
+
+function clamp(value, min = 0, max = 1) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function getSectionProgress(sectionIndex) {
+  const section = document.getElementById(SECTION_IDS[sectionIndex])
+  if (!section) return 0
+
+  const start = section.offsetTop
+  const scrollSpan = Math.max(1, section.offsetHeight - window.innerHeight)
+  return clamp((window.scrollY - start) / scrollSpan)
+}
 
 /**
  * Returns a 0-1 progress value for a specific section only.
@@ -14,23 +27,15 @@ export function useSectionProgress(sectionIndex) {
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    const start = sectionIndex / SECTION_COUNT
-    const end = (sectionIndex + 1) / SECTION_COUNT
-
     const trigger = ScrollTrigger.create({
       trigger: document.documentElement,
       start: 'top top',
       end: 'bottom bottom',
-      onUpdate: (self) => {
-        const p = self.progress
-        if (p < start || p >= end) {
-          setProgress(0)
-        } else {
-          setProgress((p - start) / (end - start))
-        }
-      },
+      invalidateOnRefresh: true,
+      onUpdate: () => setProgress(getSectionProgress(sectionIndex)),
     })
 
+    setProgress(getSectionProgress(sectionIndex))
     return () => trigger.kill()
   }, [sectionIndex])
 

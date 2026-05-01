@@ -1,14 +1,14 @@
 const META_CHIPS = [
-  { label: 'AI/ML Engineer',      color: '#00d4ff' },
+  { label: 'Data Scientist',      color: '#00d4ff' },
+  { label: 'Applied AI Engineer', color: '#10b981' },
   { label: 'Computer Vision',     color: '#8b5cf6' },
   { label: 'Data Engineering',    color: '#f59e0b' },
-  { label: 'Intelligent Systems', color: '#10b981' },
 ]
 
 const STATS = [
-  { label: '12 Projects',    color: '#00d4ff' },
+  { label: '8 Projects',     color: '#00d4ff' },
   { label: '80+ Papers Read', color: '#8b5cf6' },
-  { label: '∞ Coffees',      color: '#f59e0b' },
+  { label: 'Always Shipping', color: '#f59e0b' },
 ]
 
 export default function AboutSection() {

@@ -128,9 +128,9 @@ function CentralNode({ x, y }) {
             lineHeight: 1.4,
           }}
         >
-          AI / ML
+          Data
           <br />
-          Engineer
+          Applied AI
         </div>
       </div>
     </div>
@@ -325,6 +325,9 @@ function ProjectNode({ project, pos, cx, cy, isSelected, onHover, onHoverEnd, on
 
 // ─── Right-side glassmorphism detail panel ───────────────────────────────────
 function DetailPanel({ project, onClose }) {
+  const hasGithub = project.github && project.github !== '#'
+  const hasDemo = project.demo && project.demo !== '#'
+
   return (
     <motion.div
       key={project.id}
@@ -498,7 +501,11 @@ function DetailPanel({ project, onClose }) {
       {/* CTA buttons */}
       <div style={{ display: 'flex', gap: 10 }}>
         <a
-          href={project.github}
+          href={hasGithub ? project.github : undefined}
+          aria-disabled={!hasGithub}
+          onClick={(event) => {
+            if (!hasGithub) event.preventDefault()
+          }}
           style={{
             flex: 1,
             display: 'flex',
@@ -512,16 +519,21 @@ function DetailPanel({ project, onClose }) {
             borderRadius: 10,
             padding: '11px 0',
             textDecoration: 'none',
-            background: 'rgba(0,212,255,0.07)',
-            cursor: 'pointer',
+            background: hasGithub ? 'rgba(0,212,255,0.07)' : 'rgba(226,232,240,0.035)',
+            opacity: hasGithub ? 1 : 0.55,
+            cursor: hasGithub ? 'pointer' : 'not-allowed',
             transition: 'background 0.2s, border-color 0.2s',
           }}
         >
           <Code2 size={13} />
-          GitHub
+          {hasGithub ? 'GitHub' : 'Code Soon'}
         </a>
         <a
-          href={project.demo}
+          href={hasDemo ? project.demo : undefined}
+          aria-disabled={!hasDemo}
+          onClick={(event) => {
+            if (!hasDemo) event.preventDefault()
+          }}
           style={{
             flex: 1,
             display: 'flex',
@@ -535,13 +547,14 @@ function DetailPanel({ project, onClose }) {
             borderRadius: 10,
             padding: '11px 0',
             textDecoration: 'none',
-            background: `${project.color}0b`,
-            cursor: 'pointer',
+            background: hasDemo ? `${project.color}0b` : 'rgba(226,232,240,0.035)',
+            opacity: hasDemo ? 1 : 0.55,
+            cursor: hasDemo ? 'pointer' : 'not-allowed',
             transition: 'background 0.2s, border-color 0.2s',
           }}
         >
           <ExternalLink size={13} />
-          Case Study
+          {hasDemo ? 'Case Study' : 'On Request'}
         </a>
       </div>
     </motion.div>
@@ -705,7 +718,11 @@ function MobileCards() {
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               <a
-                href={p.github}
+                href={p.github && p.github !== '#' ? p.github : undefined}
+                aria-disabled={!p.github || p.github === '#'}
+                onClick={(event) => {
+                  if (!p.github || p.github === '#') event.preventDefault()
+                }}
                 style={{
                   fontFamily: 'Space Mono, monospace',
                   fontSize: '0.6rem',
@@ -715,12 +732,18 @@ function MobileCards() {
                   borderRadius: '7px',
                   padding: '5px 12px',
                   background: 'rgba(0,212,255,0.07)',
+                  opacity: p.github && p.github !== '#' ? 1 : 0.55,
+                  cursor: p.github && p.github !== '#' ? 'pointer' : 'not-allowed',
                 }}
               >
-                GitHub →
+                {p.github && p.github !== '#' ? 'GitHub ->' : 'Code Soon'}
               </a>
               <a
-                href={p.demo}
+                href={p.demo && p.demo !== '#' ? p.demo : undefined}
+                aria-disabled={!p.demo || p.demo === '#'}
+                onClick={(event) => {
+                  if (!p.demo || p.demo === '#') event.preventDefault()
+                }}
                 style={{
                   fontFamily: 'Space Mono, monospace',
                   fontSize: '0.6rem',
@@ -730,9 +753,11 @@ function MobileCards() {
                   borderRadius: '7px',
                   padding: '5px 12px',
                   background: `${p.color}0b`,
+                  opacity: p.demo && p.demo !== '#' ? 1 : 0.55,
+                  cursor: p.demo && p.demo !== '#' ? 'pointer' : 'not-allowed',
                 }}
               >
-                Case Study ↗
+                {p.demo && p.demo !== '#' ? 'Case Study' : 'On Request'}
               </a>
             </div>
           </motion.div>

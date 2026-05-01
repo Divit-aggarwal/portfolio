@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
+import { GitBranch, Link2, Mail, SendHorizontal } from 'lucide-react'
 
 const INITIAL_VALUES = { name: '', email: '', message: '' }
+const CONTACT_EMAIL = 'theagihustler@gmail.com'
 
 const SOCIALS = [
-  { label: 'GitHub',   icon: 'GH', href: 'https://github.com/' },
-  { label: 'LinkedIn', icon: 'in', href: 'https://www.linkedin.com/' },
-  { label: 'Kaggle',   icon: 'K',  href: 'https://www.kaggle.com/' },
+  { label: 'GitHub', icon: GitBranch, fallback: 'GH', href: 'https://github.com/Divit-aggarwal' },
+  { label: 'LinkedIn', icon: Link2, fallback: 'in', href: 'https://in.linkedin.com/in/divit-aggarwal-' },
+  { label: 'Email', icon: Mail, fallback: '@', href: `mailto:${CONTACT_EMAIL}` },
 ]
 
-const SOCIAL_SIZE  = 40   // node diameter px
-const SOCIAL_GAP   = 80   // edge-to-edge gap px
+const CONTACT_POINTS = [
+  { label: 'Focus', value: 'Data + Applied AI' },
+  { label: 'Mode', value: 'Remote / Hybrid' },
+  { label: 'Reply', value: 'Usually <24h' },
+]
+
+const SOCIAL_SIZE  = 38   // node diameter px
+const SOCIAL_GAP   = 58   // edge-to-edge gap px
 const SOCIAL_STEP  = SOCIAL_SIZE + SOCIAL_GAP  // center-to-center
 const SOCIAL_TOTAL = SOCIALS.length * SOCIAL_SIZE + (SOCIALS.length - 1) * SOCIAL_GAP
 // node i center-x = SOCIAL_SIZE/2 + i * SOCIAL_STEP
@@ -25,6 +33,22 @@ function validate(values) {
   return errs
 }
 
+function buildMailtoUrl(values) {
+  const name = values.name.trim()
+  const email = values.email.trim()
+  const message = values.message.trim()
+  const subject = `Portfolio inquiry from ${name}`
+  const body = [
+    `Name: ${name}`,
+    `Email: ${email}`,
+    '',
+    'Message:',
+    message,
+  ].join('\n')
+
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
+
 function useClockTick() {
   const fmt = () => new Date().toUTCString().slice(17, 25)
   const [time, setTime] = useState(fmt)
@@ -33,6 +57,29 @@ function useClockTick() {
     return () => clearInterval(id)
   }, [])
   return time
+}
+
+function ContactBackdrop() {
+  return (
+    <div className="contact-backdrop" aria-hidden="true">
+      <div className="contact-grid" />
+      <div className="contact-orbit contact-orbit-a" />
+      <div className="contact-orbit contact-orbit-b" />
+      <div className="contact-beam contact-beam-a" />
+      <div className="contact-beam contact-beam-b" />
+      {[...Array(12)].map((_, i) => (
+        <span
+          key={i}
+          className="contact-particle"
+          style={{
+            '--x': `${8 + ((i * 23) % 86)}%`,
+            '--y': `${12 + ((i * 31) % 72)}%`,
+            '--d': `${i * 0.35}s`,
+          }}
+        />
+      ))}
+    </div>
+  )
 }
 
 // ─── Signal input field ──────────────────────────────────────────────────────
@@ -155,18 +202,29 @@ function SocialNet() {
       {SOCIALS.map((social, i) => {
         const isHov = hovered === i
         const cx = nodeCenter(i)
+        const Icon = social.icon
         return (
           <a
             key={social.label}
-            href={social.href}
+            href={social.href || undefined}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={social.label}
+            aria-disabled={!social.href}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
-            onClick={() => handleClick(i)}
+            onClick={(event) => {
+              if (!social.href) event.preventDefault()
+              handleClick(i)
+            }}
             className="absolute grid place-items-center"
-            style={{ width: SOCIAL_SIZE, height: SOCIAL_SIZE, left: cx - SOCIAL_SIZE / 2, top: 0 }}
+            style={{
+              width: SOCIAL_SIZE,
+              height: SOCIAL_SIZE,
+              left: cx - SOCIAL_SIZE / 2,
+              top: 0,
+              cursor: social.href ? 'pointer' : 'not-allowed',
+            }}
           >
             {/* Ripple */}
             {rippleIdx === i && (
@@ -194,7 +252,7 @@ function SocialNet() {
                 className="font-['Space_Mono'] text-xs font-bold transition-colors duration-300"
                 style={{ color: isHov ? '#00d4ff' : 'rgba(0,212,255,0.42)' }}
               >
-                {social.icon}
+                {Icon ? <Icon size={15} strokeWidth={1.8} /> : social.fallback}
               </span>
             </div>
             {/* Label */}
@@ -244,6 +302,7 @@ export default function NeuralForm() {
     setErrors({})
     setPhase('sending')
     window.dispatchEvent(new CustomEvent('contact:valid-submit'))
+    window.location.href = buildMailtoUrl(values)
 
     // Button compress
     gsap.to(buttonRef.current, {
@@ -302,26 +361,60 @@ export default function NeuralForm() {
 
   const STATUS_COLOR = { idle: '#00d4ff', sending: '#f59e0b', success: '#10b981' }[phase]
   const STATUS_LABEL = { idle: 'SYSTEM READY', sending: 'ENCODING MESSAGE...', success: 'SIGNAL TRANSMITTED' }[phase]
-  const BTN_LABEL    = { idle: 'Send Signal →', sending: 'Encoding...', success: 'Signal Sent' }[phase]
+  const BTN_LABEL    = { idle: 'Open Email Draft', sending: 'Encoding...', success: 'Draft Opened' }[phase]
 
   return (
-    <div className="fixed inset-0 z-10 flex flex-col items-center justify-center px-5 pointer-events-none">
-      <div ref={cardRef} className="w-full max-w-md pointer-events-auto relative">
+    <div className="fixed inset-0 z-10 overflow-y-auto px-5 py-8 pointer-events-none">
+      <ContactBackdrop />
+
+      <div className="contact-stack">
+        <section className="contact-content-width text-center">
+          <div className="mb-3 font-['Space_Mono'] text-[10px] uppercase tracking-[0.28em] text-cyan-300/65">
+            06 / Contact
+          </div>
+
+          <h2 className="mx-auto mb-3 max-w-[10.75ch] font-['Syne'] text-[clamp(1.9rem,3.85vw,2.85rem)] font-extrabold leading-[1.03] text-slate-50">
+            Build the next intelligent system.
+          </h2>
+
+          <p className="mx-auto mb-5 max-w-[460px] font-['Space_Mono'] text-[0.7rem] leading-6 text-slate-400">
+            Send a concise brief. I&apos;ll reply with the clearest next step for the data,
+            model, or applied AI workflow you want to ship.
+          </p>
+
+          <div className="mx-auto grid max-w-[460px] grid-cols-3 gap-2">
+            {CONTACT_POINTS.map((item) => (
+              <div
+                key={item.label}
+                className="contact-info-chip"
+              >
+                <div className="mb-1 font-['Space_Mono'] text-[9px] uppercase tracking-[0.22em] text-cyan-300/45">
+                  {item.label}
+                </div>
+                <div className="font-['Space_Mono'] text-[11px] leading-5 text-slate-200">
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div ref={cardRef} className="w-full max-w-[460px] relative">
 
         {/* Signal beam — shoots upward on transmit */}
         <div
           ref={beamRef}
           className="absolute left-1/2 -translate-x-1/2 bottom-full opacity-0 pointer-events-none"
           style={{
-            width: '1px',
-            height: '130px',
-            background: 'linear-gradient(0deg, #00d4ff 0%, rgba(0,212,255,0.4) 55%, transparent 100%)',
-            boxShadow: '0 0 12px rgba(0,212,255,0.55)',
+            width: '2px',
+            height: '180px',
+            background: 'linear-gradient(0deg, #00d4ff 0%, rgba(139,92,246,0.45) 48%, transparent 100%)',
+            boxShadow: '0 0 18px rgba(0,212,255,0.7)',
           }}
         />
 
         {/* Animated gradient border wrapper */}
-        <div className="contact-card-outer relative">
+        <div className="contact-card-outer relative contact-card-lift">
 
           {/* Corner targeting brackets */}
           <div className="contact-corner contact-corner-tl" />
@@ -333,10 +426,10 @@ export default function NeuralForm() {
           <div className="contact-scanline" />
 
           {/* Inner surface */}
-          <div className="contact-card-inner p-5">
+          <div className="contact-card-inner p-5 sm:p-6">
 
             {/* ── Status bar ── */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <div
                   className={`w-1.5 h-1.5 rounded-full${phase === 'idle' ? ' contact-status-dot' : ''}`}
@@ -352,15 +445,16 @@ export default function NeuralForm() {
             </div>
 
             {/* ── Header ── */}
-            <div className="mb-0.5 font-['Space_Mono'] text-[9px] uppercase tracking-[0.3em] text-cyan-400/38">
-              05 / Contact
+            <div className="mb-5 text-center">
+              <div>
+                <h3 className="mb-1 font-['Syne'] text-[30px] font-bold text-slate-50 leading-tight">
+                  Transmit a Signal
+                </h3>
+                <p className="font-['Space_Mono'] text-[11px] text-slate-500 leading-relaxed">
+                  Your message opens as a ready-to-send email draft.
+                </p>
+              </div>
             </div>
-            <h2 className="mb-1 font-['Syne'] text-[27px] font-bold text-slate-50 leading-tight">
-              Transmit a Signal
-            </h2>
-            <p className="mb-5 font-['Space_Mono'] text-[11px] text-slate-500 leading-relaxed">
-              Let's build something intelligent together.
-            </p>
 
             {/* ── Form (hidden during success) ── */}
             <form
@@ -378,10 +472,13 @@ export default function NeuralForm() {
                 ref={buttonRef}
                 type="submit"
                 disabled={phase === 'sending'}
-                className="contact-send-btn w-full relative overflow-hidden px-5 py-3 font-['Space_Mono'] text-[13px] font-bold"
+                className="contact-send-btn w-full relative overflow-hidden px-5 py-3.5 font-['Space_Mono'] text-[13px] font-bold"
               >
                 <div className="contact-send-sweep absolute inset-0 pointer-events-none" />
-                <span className="relative z-10">{BTN_LABEL}</span>
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  {BTN_LABEL}
+                  <SendHorizontal size={15} strokeWidth={1.8} />
+                </span>
               </button>
             </form>
 
@@ -395,27 +492,27 @@ export default function NeuralForm() {
                   ✓
                 </div>
                 <div className="font-['Syne'] text-lg font-bold text-emerald-300 mb-1.5">
-                  Signal Received
+                  Email Draft Opened
                 </div>
                 <div className="font-['Space_Mono'] text-[11px] text-slate-500 tracking-wide">
-                  Response will be initiated.
+                  Review and send it from your mail app.
                 </div>
               </div>
             )}
 
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* ── Social network nodes ── */}
-      <div className="mt-7 pointer-events-auto">
-        <SocialNet />
+        <div className="flex w-full justify-center">
+          <SocialNet />
+        </div>
       </div>
 
       {/* ── Footer ── */}
       <footer className="fixed bottom-4 left-0 right-0 z-10 px-5 text-center font-['Space_Mono'] text-[0.6rem] leading-6 text-slate-500/50 pointer-events-none select-none">
         <div>Built with Three.js · React · A passion for intelligence</div>
-        <div>© 2025 Divit Aggarwal</div>
+        <div>© 2026 Divit Aggarwal</div>
       </footer>
     </div>
   )
