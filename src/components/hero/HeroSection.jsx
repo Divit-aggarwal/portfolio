@@ -30,21 +30,6 @@ export default function HeroSection() {
       >
         {/* ── Name + tagline ── */}
         <div style={{ textAlign: 'center' }}>
-          {/* Eyebrow label */}
-          <p
-            style={{
-              fontFamily: 'Space Mono, monospace',
-              fontSize: 'clamp(0.52rem, 1vw, 0.68rem)',
-              color: '#8b5cf6',
-              letterSpacing: '0.32em',
-              textTransform: 'uppercase',
-              marginBottom: '0.8rem',
-              opacity: 0.8,
-            }}
-          >
-            AI / ML Portfolio · 2025
-          </p>
-
           {/* Name */}
           <h1
             style={{
@@ -82,7 +67,7 @@ export default function HeroSection() {
               opacity: 0.85,
             }}
           >
-            AI Engineer&nbsp;&nbsp;·&nbsp;&nbsp;Data Scientist&nbsp;&nbsp;·&nbsp;&nbsp;Builder of Intelligent Systems
+            Data Scientist&nbsp;&nbsp;·&nbsp;&nbsp;Applied AI Engineer
           </p>
         </div>
 
@@ -160,7 +145,7 @@ export default function HeroSection() {
                 e.currentTarget.style.transform = 'translateY(0)'
               }}
             >
-              Explore Work
+              Explore  More
             </button>
           </div>
 

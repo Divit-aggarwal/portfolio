@@ -1,16 +1,33 @@
-# React + Vite
+# Divit AI Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive Data Scientist and Applied AI Engineer portfolio built with React, Vite, Three.js, GSAP, Framer Motion, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Sections
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Hero: animated neural-network entry scene
+- About: concise profile and focus areas
+- Projects: interactive constellation of selected AI, data, and full-stack systems
+- Skills: 3D orbit view of tools and technologies
+- Timeline: career and learning path from data foundations to applied AI systems
+- Transformer: self-attention inspired working-style visualization
+- Contact: animated signal form and social links
 
-## React Compiler
+## Local Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+## Production Checks
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run lint
+npm run build
+```
+
+## Deployment
+
+The project is configured for Vercel with SPA rewrites in `vercel.json`.
+
+Before publishing, replace any project `github` or `demo` fields in `src/data/projects.js` that still use `#`. Those links are intentionally rendered as unavailable in the UI until real URLs are added.

@@ -63,7 +63,7 @@ export default function TransformerSection() {
             textTransform: 'uppercase',
             opacity: 0.7,
           }}>
-            04 / TRANSFORMER
+            05 / TRANSFORMER
           </div>
 
           {/* Heading */}
